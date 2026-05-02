@@ -147,6 +147,8 @@ build/
 # Prisma
 server/prisma/*.db
 server/prisma/*.db-journal
+server/*.db
+server/*.db-journal
 
 # OS
 .DS_Store
