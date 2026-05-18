@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { loginUser } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
@@ -11,8 +11,10 @@ type FieldErrors = Partial<Record<keyof FormState, string>>;
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { login } = useAuth();
+  const from = (location.state as { from?: Location })?.from?.pathname ?? '/';
 
   const [form, setForm] = useState<FormState>({ email: '', password: '' });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -24,7 +26,7 @@ export default function LoginPage() {
     mutationFn: loginUser,
     onSuccess: (data) => {
       login(data.accessToken, data.user);
-      navigate('/');
+      navigate(from, { replace: true });
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string; errors?: { field: string; message: string }[] } } };
