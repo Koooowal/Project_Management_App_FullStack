@@ -1,13 +1,33 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
+import PrivateRoute from './PrivateRoute';
+import PublicRoute from './PublicRoute';
+import LoginPage from '../pages/LoginPage';
+import RegisterPage from '../pages/RegisterPage';
 import NotFoundPage from '../pages/NotFoundPage';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: <PrivateRoute />,
     children: [
-      // routes will be added here in upcoming issues
+      {
+        element: <Layout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/projects" replace />,
+          },
+          // /projects and nested routes will be added in upcoming issues
+        ],
+      },
+    ],
+  },
+  {
+    element: <PublicRoute />,
+    children: [
+      { path: '/login', element: <LoginPage /> },
+      { path: '/register', element: <RegisterPage /> },
     ],
   },
   {
