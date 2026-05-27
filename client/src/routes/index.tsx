@@ -5,6 +5,7 @@ import PublicRoute from './PublicRoute';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import ProjectsPage from '../pages/ProjectsPage';
+import ProjectDetailPage from '../pages/ProjectDetailPage';
 import NotFoundPage from '../pages/NotFoundPage';
 
 export const router = createBrowserRouter([
@@ -23,7 +24,10 @@ export const router = createBrowserRouter([
             path: 'projects',
             element: <ProjectsPage />,
           },
-          // /projects/:id will be added in upcoming issues
+          {
+            path: 'projects/:id',
+            element: <ProjectDetailPage />,
+          },
         ],
       },
     ],
