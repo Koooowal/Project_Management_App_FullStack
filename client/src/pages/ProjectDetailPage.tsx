@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchProjects } from '../api/projects';
 import { fetchProjectTasks } from '../api/tasks';
 import TaskCard from '../components/tasks/TaskCard';
+import CreateTaskModal from '../components/tasks/CreateTaskModal';
+import Button from '../components/ui/Button';
 
 export default function ProjectDetailPage() {
   const { id: projectId } = useParams<{ id: string }>();
+  const [modalOpen, setModalOpen] = useState(false);
 
   const { data: projects, isLoading: projectsLoading } = useQuery({
     queryKey: ['projects'],
@@ -30,7 +34,7 @@ export default function ProjectDetailPage() {
 
   if (!projectsLoading && !project) {
     return (
-      <div className="text-center py-16">
+      <div className="py-16 text-center">
         <p className="text-lg font-medium text-gray-400">Project not found</p>
         <Link to="/projects" className="mt-2 inline-block text-sm text-indigo-600 hover:underline">
           Back to projects
@@ -59,7 +63,10 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      <h2 className="mb-4 text-lg font-medium text-gray-900">Tasks</h2>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-medium text-gray-900">Tasks</h2>
+        <Button onClick={() => setModalOpen(true)}>+ New task</Button>
+      </div>
 
       {tasksLoading && (
         <div className="flex flex-col gap-3">
@@ -76,8 +83,12 @@ export default function ProjectDetailPage() {
       )}
 
       {tasks && tasks.length === 0 && (
-        <div className="rounded-xl border-2 border-dashed border-gray-200 py-12 text-center">
+        <div
+          className="cursor-pointer rounded-xl border-2 border-dashed border-gray-200 py-12 text-center transition hover:border-indigo-300"
+          onClick={() => setModalOpen(true)}
+        >
           <p className="text-gray-400">No tasks in this project yet</p>
+          <p className="mt-1 text-sm text-gray-400">Click to create your first task</p>
         </div>
       )}
 
@@ -88,6 +99,12 @@ export default function ProjectDetailPage() {
           ))}
         </div>
       )}
+
+      <CreateTaskModal
+        projectId={projectId}
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
     </div>
   );
 }
