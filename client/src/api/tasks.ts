@@ -14,7 +14,19 @@ export type Task = {
   assignee: { id: string; name: string; email: string } | null;
 };
 
+export type CreateTaskInput = {
+  title: string;
+  description?: string;
+  status?: TaskStatus;
+  assigneeId?: string;
+};
+
 export async function fetchProjectTasks(projectId: string): Promise<Task[]> {
   const res = await apiClient.get<{ tasks: Task[] }>(`/projects/${projectId}/tasks`);
   return res.data.tasks;
+}
+
+export async function createTask(projectId: string, data: CreateTaskInput): Promise<Task> {
+  const res = await apiClient.post<{ task: Task }>(`/projects/${projectId}/tasks`, data);
+  return res.data.task;
 }
