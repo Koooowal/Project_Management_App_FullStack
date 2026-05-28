@@ -26,7 +26,19 @@ export async function fetchProjectTasks(projectId: string): Promise<Task[]> {
   return res.data.tasks;
 }
 
+export type UpdateTaskInput = {
+  title?: string;
+  description?: string | null;
+  status?: TaskStatus;
+  assigneeId?: string | null;
+};
+
 export async function createTask(projectId: string, data: CreateTaskInput): Promise<Task> {
   const res = await apiClient.post<{ task: Task }>(`/projects/${projectId}/tasks`, data);
+  return res.data.task;
+}
+
+export async function updateTask(id: string, data: UpdateTaskInput): Promise<Task> {
+  const res = await apiClient.put<{ task: Task }>(`/tasks/${id}`, data);
   return res.data.task;
 }
