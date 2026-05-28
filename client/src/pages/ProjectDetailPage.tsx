@@ -95,7 +95,7 @@ export default function ProjectDetailPage() {
       {tasks && tasks.length > 0 && (
         <div className="flex flex-col gap-3">
           {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} />
+            <TaskCard key={task.id} task={task} projectId={projectId} />
           ))}
         </div>
       )}
