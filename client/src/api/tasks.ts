@@ -42,3 +42,7 @@ export async function updateTask(id: string, data: UpdateTaskInput): Promise<Tas
   const res = await apiClient.put<{ task: Task }>(`/tasks/${id}`, data);
   return res.data.task;
 }
+
+export async function deleteTask(id: string): Promise<void> {
+  await apiClient.delete(`/tasks/${id}`);
+}
