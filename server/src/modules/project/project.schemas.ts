@@ -10,5 +10,10 @@ export const updateProjectSchema = z.object({
   description: z.string().max(500).nullable().optional(),
 });
 
+export const addMemberSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
+export type AddMemberInput = z.infer<typeof addMemberSchema>;
