@@ -16,5 +16,10 @@ export const updateTaskSchema = z.object({
   assigneeId: z.string().nullable().optional(),
 });
 
+export const assignTaskSchema = z.object({
+  assigneeId: z.string().min(1).nullable(),
+});
+
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+export type AssignTaskInput = z.infer<typeof assignTaskSchema>;
