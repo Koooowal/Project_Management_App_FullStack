@@ -46,3 +46,8 @@ export async function updateTask(id: string, data: UpdateTaskInput): Promise<Tas
 export async function deleteTask(id: string): Promise<void> {
   await apiClient.delete(`/tasks/${id}`);
 }
+
+export async function assignTask(taskId: string, assigneeId: string | null): Promise<Task> {
+  const res = await apiClient.put<{ task: Task }>(`/tasks/${taskId}/assign`, { assigneeId });
+  return res.data.task;
+}

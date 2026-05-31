@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Task, updateTask } from '../../api/tasks';
+import { Task, assignTask, updateTask } from '../../api/tasks';
+import AssigneeSelect from './AssigneeSelect';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
@@ -16,19 +17,32 @@ export default function EditTaskModal({ task, projectId, open, onClose }: Props)
   const queryClient = useQueryClient();
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? '');
+  const [assigneeId, setAssigneeId] = useState(task.assigneeId ?? '');
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (open) {
       setTitle(task.title);
       setDescription(task.description ?? '');
+      setAssigneeId(task.assigneeId ?? '');
       setError('');
     }
   }, [open, task]);
 
   const mutation = useMutation({
-    mutationFn: (data: { title: string; description: string }) =>
-      updateTask(task.id, { title: data.title, description: data.description || null }),
+    mutationFn: async (data: { title: string; description: string; assigneeId: string }) => {
+      const updated = await updateTask(task.id, {
+        title: data.title,
+        description: data.description || null,
+      });
+
+      const assigneeChanged = (task.assigneeId ?? '') !== data.assigneeId;
+      if (assigneeChanged) {
+        return assignTask(task.id, data.assigneeId || null);
+      }
+
+      return updated;
+    },
     onSuccess: (updated) => {
       queryClient.setQueryData<Task[]>(['projects', projectId, 'tasks'], (old = []) =>
         old.map((t) => (t.id === updated.id ? updated : t)),
@@ -45,7 +59,11 @@ export default function EditTaskModal({ task, projectId, open, onClose }: Props)
       setError('Task title is required');
       return;
     }
-    mutation.mutate({ title: title.trim(), description: description.trim() });
+    mutation.mutate({
+      title: title.trim(),
+      description: description.trim(),
+      assigneeId,
+    });
   }
 
   return (
@@ -72,6 +90,7 @@ export default function EditTaskModal({ task, projectId, open, onClose }: Props)
             className="resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-indigo-500"
           />
         </div>
+        <AssigneeSelect projectId={projectId} value={assigneeId} onChange={setAssigneeId} />
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancel

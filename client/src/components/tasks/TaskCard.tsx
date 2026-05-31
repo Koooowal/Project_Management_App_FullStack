@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Task, TaskStatus, deleteTask, updateTask } from '../../api/tasks';
 import EditTaskModal from './EditTaskModal';
 import ConfirmDialog from '../ui/ConfirmDialog';
+import UserAvatar from '../ui/UserAvatar';
 
 type Props = { task: Task; projectId: string };
 
@@ -99,7 +100,10 @@ export default function TaskCard({ task, projectId }: Props) {
         )}
 
         {task.assignee && (
-          <p className="mt-3 text-xs text-gray-400">Assigned to {task.assignee.name}</p>
+          <div className="mt-3 flex items-center gap-2">
+            <UserAvatar name={task.assignee.name} />
+            <span className="text-xs text-gray-500">{task.assignee.name}</span>
+          </div>
         )}
       </div>
 

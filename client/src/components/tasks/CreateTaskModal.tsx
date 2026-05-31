@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createTask } from '../../api/tasks';
+import AssigneeSelect from './AssigneeSelect';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
@@ -15,10 +16,11 @@ export default function CreateTaskModal({ projectId, open, onClose }: Props) {
   const queryClient = useQueryClient();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [assigneeId, setAssigneeId] = useState('');
   const [error, setError] = useState('');
 
   const mutation = useMutation({
-    mutationFn: (data: { title: string; description?: string }) =>
+    mutationFn: (data: { title: string; description?: string; assigneeId?: string }) =>
       createTask(projectId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
@@ -34,6 +36,7 @@ export default function CreateTaskModal({ projectId, open, onClose }: Props) {
   function handleClose() {
     setTitle('');
     setDescription('');
+    setAssigneeId('');
     setError('');
     onClose();
   }
@@ -47,6 +50,7 @@ export default function CreateTaskModal({ projectId, open, onClose }: Props) {
     mutation.mutate({
       title: title.trim(),
       description: description.trim() || undefined,
+      assigneeId: assigneeId || undefined,
     });
   }
 
@@ -76,6 +80,7 @@ export default function CreateTaskModal({ projectId, open, onClose }: Props) {
             className="resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-indigo-500"
           />
         </div>
+        <AssigneeSelect projectId={projectId} value={assigneeId} onChange={setAssigneeId} />
         <div className="flex justify-end gap-2 pt-1">
           <Button type="button" variant="secondary" onClick={handleClose}>
             Cancel
