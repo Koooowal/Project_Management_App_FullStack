@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../lib/prisma';
 import { AuthRequest } from '../../middleware/auth';
-import { CreateTaskInput, UpdateTaskInput } from './task.schemas';
+import { AssignTaskInput, CreateTaskInput, UpdateTaskInput } from './task.schemas';
 
 const taskInclude = {
   assignee: { select: { id: true, name: true, email: true } },
@@ -110,6 +110,44 @@ export async function updateTask(
     const task = await prisma.task.update({
       where: { id },
       data: req.body,
+      include: taskInclude,
+    });
+
+    res.json({ task });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function assignTask(
+  req: Request<{ id: string }> & AuthRequest & { body: AssignTaskInput },
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const id = req.params['id'] as string;
+    const userId = req.user.userId;
+    const { assigneeId } = req.body;
+
+    const existing = await prisma.task.findUnique({ where: { id } });
+    if (!existing) {
+      res.status(404).json({ message: 'Task not found' });
+      return;
+    }
+
+    if (!(await isProjectMember(existing.projectId, userId))) {
+      res.status(403).json({ message: 'You do not have access to this task' });
+      return;
+    }
+
+    if (assigneeId && !(await isProjectMember(existing.projectId, assigneeId))) {
+      res.status(400).json({ message: 'Assignee must be a project member' });
+      return;
+    }
+
+    const task = await prisma.task.update({
+      where: { id },
+      data: { assigneeId },
       include: taskInclude,
     });
 
