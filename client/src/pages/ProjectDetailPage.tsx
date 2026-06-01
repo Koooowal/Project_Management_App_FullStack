@@ -1,15 +1,31 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchProjects } from '../api/projects';
-import { fetchProjectTasks } from '../api/tasks';
+import { fetchProjectTasks, Task } from '../api/tasks';
 import TaskCard from '../components/tasks/TaskCard';
 import CreateTaskModal from '../components/tasks/CreateTaskModal';
+import TaskStatusFilter, { StatusFilter } from '../components/tasks/TaskStatusFilter';
 import Button from '../components/ui/Button';
+
+function filterTasks(tasks: Task[], status: StatusFilter): Task[] {
+  if (status === 'ALL') return tasks;
+  return tasks.filter((task) => task.status === status);
+}
+
+function countByStatus(tasks: Task[]) {
+  return {
+    ALL: tasks.length,
+    TODO: tasks.filter((t) => t.status === 'TODO').length,
+    IN_PROGRESS: tasks.filter((t) => t.status === 'IN_PROGRESS').length,
+    DONE: tasks.filter((t) => t.status === 'DONE').length,
+  };
+}
 
 export default function ProjectDetailPage() {
   const { id: projectId } = useParams<{ id: string }>();
   const [modalOpen, setModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
 
   const { data: projects, isLoading: projectsLoading } = useQuery({
     queryKey: ['projects'],
@@ -19,7 +35,7 @@ export default function ProjectDetailPage() {
   const project = projects?.find((p) => p.id === projectId);
 
   const {
-    data: tasks,
+    data: allTasks,
     isLoading: tasksLoading,
     isError: tasksError,
   } = useQuery({
@@ -27,6 +43,15 @@ export default function ProjectDetailPage() {
     queryFn: () => fetchProjectTasks(projectId!),
     enabled: !!projectId,
   });
+
+  const { data: filteredTasks = [] } = useQuery({
+    queryKey: ['projects', projectId, 'tasks'],
+    queryFn: () => fetchProjectTasks(projectId!),
+    enabled: !!projectId,
+    select: (data) => filterTasks(data, statusFilter),
+  });
+
+  const counts = useMemo(() => countByStatus(allTasks ?? []), [allTasks]);
 
   if (!projectId) {
     return <p className="text-sm text-gray-500">Invalid project.</p>;
@@ -42,6 +67,9 @@ export default function ProjectDetailPage() {
       </div>
     );
   }
+
+  const hasAnyTasks = (allTasks?.length ?? 0) > 0;
+  const hasFilteredTasks = filteredTasks.length > 0;
 
   return (
     <div>
@@ -68,6 +96,12 @@ export default function ProjectDetailPage() {
         <Button onClick={() => setModalOpen(true)}>+ New task</Button>
       </div>
 
+      {hasAnyTasks && (
+        <div className="mb-4">
+          <TaskStatusFilter value={statusFilter} onChange={setStatusFilter} counts={counts} />
+        </div>
+      )}
+
       {tasksLoading && (
         <div className="flex flex-col gap-3">
           {[...Array(3)].map((_, i) => (
@@ -82,7 +116,7 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      {tasks && tasks.length === 0 && (
+      {!tasksLoading && !hasAnyTasks && (
         <div
           className="cursor-pointer rounded-xl border-2 border-dashed border-gray-200 py-12 text-center transition hover:border-indigo-300"
           onClick={() => setModalOpen(true)}
@@ -92,9 +126,15 @@ export default function ProjectDetailPage() {
         </div>
       )}
 
-      {tasks && tasks.length > 0 && (
+      {!tasksLoading && hasAnyTasks && !hasFilteredTasks && (
+        <div className="rounded-xl border border-gray-200 bg-white py-10 text-center">
+          <p className="text-gray-400">No tasks match this filter</p>
+        </div>
+      )}
+
+      {!tasksLoading && hasFilteredTasks && (
         <div className="flex flex-col gap-3">
-          {tasks.map((task) => (
+          {filteredTasks.map((task) => (
             <TaskCard key={task.id} task={task} projectId={projectId} />
           ))}
         </div>
