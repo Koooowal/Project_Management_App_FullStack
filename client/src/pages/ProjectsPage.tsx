@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchProjects } from '../api/projects';
 import ProjectCard from '../components/projects/ProjectCard';
+import ProjectListSkeleton from '../components/projects/ProjectListSkeleton';
 import CreateProjectModal from '../components/projects/CreateProjectModal';
+import { ProjectsEmptyState } from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
 
 export default function ProjectsPage() {
@@ -23,13 +25,7 @@ export default function ProjectsPage() {
         <Button onClick={() => setModalOpen(true)}>+ New project</Button>
       </div>
 
-      {isLoading && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-32 animate-pulse rounded-xl bg-gray-100" />
-          ))}
-        </div>
-      )}
+      {isLoading && <ProjectListSkeleton />}
 
       {isError && (
         <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -37,17 +33,11 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      {projects && projects.length === 0 && (
-        <div
-          className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-200 py-16 text-center cursor-pointer hover:border-indigo-300 transition"
-          onClick={() => setModalOpen(true)}
-        >
-          <p className="text-lg font-medium text-gray-400">No projects yet</p>
-          <p className="mt-1 text-sm text-gray-400">Click to create your first project</p>
-        </div>
+      {!isLoading && projects && projects.length === 0 && (
+        <ProjectsEmptyState onCreateClick={() => setModalOpen(true)} />
       )}
 
-      {projects && projects.length > 0 && (
+      {!isLoading && projects && projects.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
             <ProjectCard key={project.id} project={project} />
