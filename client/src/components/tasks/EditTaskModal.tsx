@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Task, assignTask, updateTask } from '../../api/tasks';
+import { useToast } from '../../context/ToastContext';
 import AssigneeSelect from './AssigneeSelect';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
@@ -15,6 +16,7 @@ type Props = {
 
 export default function EditTaskModal({ task, projectId, open, onClose }: Props) {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? '');
   const [assigneeId, setAssigneeId] = useState(task.assigneeId ?? '');
@@ -48,9 +50,13 @@ export default function EditTaskModal({ task, projectId, open, onClose }: Props)
         old.map((t) => (t.id === updated.id ? updated : t)),
       );
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      showToast('Task updated successfully');
       onClose();
     },
-    onError: () => setError('Failed to update task. Please try again.'),
+    onError: () => {
+      setError('Failed to update task. Please try again.');
+      showToast('Failed to update task', 'error');
+    },
   });
 
   function handleSubmit(e: React.FormEvent) {

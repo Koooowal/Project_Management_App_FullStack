@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createTask } from '../../api/tasks';
+import { useToast } from '../../context/ToastContext';
 import AssigneeSelect from './AssigneeSelect';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
@@ -14,6 +15,7 @@ type Props = {
 
 export default function CreateTaskModal({ projectId, open, onClose }: Props) {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
@@ -25,11 +27,14 @@ export default function CreateTaskModal({ projectId, open, onClose }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      showToast('Task created successfully');
       handleClose();
     },
     onError: (err: unknown) => {
       const data = (err as { response?: { data?: { message?: string } } })?.response?.data;
-      setError(data?.message ?? 'Failed to create task. Please try again.');
+      const message = data?.message ?? 'Failed to create task. Please try again.';
+      setError(message);
+      showToast(message, 'error');
     },
   });
 
