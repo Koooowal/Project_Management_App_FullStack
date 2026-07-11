@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteProject, Project } from '../../api/projects';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
 import EditProjectModal from './EditProjectModal';
 import ConfirmDialog from '../ui/ConfirmDialog';
 
@@ -11,6 +12,7 @@ type Props = { project: Project };
 export default function ProjectCard({ project }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const isOwner = user?.id === project.ownerId;
@@ -21,8 +23,10 @@ export default function ProjectCard({ project }: Props) {
       queryClient.setQueryData<Project[]>(['projects'], (old = []) =>
         old.filter((p) => p.id !== project.id),
       );
+      showToast('Project deleted successfully');
       setDeleteOpen(false);
     },
+    onError: () => showToast('Failed to delete project', 'error'),
   });
 
   return (

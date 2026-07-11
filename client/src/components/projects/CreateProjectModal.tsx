@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createProject, Project } from '../../api/projects';
+import { useToast } from '../../context/ToastContext';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
@@ -12,6 +13,7 @@ type Props = {
 
 export default function CreateProjectModal({ open, onClose }: Props) {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
@@ -43,9 +45,11 @@ export default function CreateProjectModal({ open, onClose }: Props) {
         queryClient.setQueryData(['projects'], context.previous);
       }
       setError('Failed to create project. Please try again.');
+      showToast('Failed to create project', 'error');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      showToast('Project created successfully');
       handleClose();
     },
   });

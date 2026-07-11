@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Task, TaskStatus, deleteTask, updateTask } from '../../api/tasks';
+import { useToast } from '../../context/ToastContext';
 import EditTaskModal from './EditTaskModal';
 import ConfirmDialog from '../ui/ConfirmDialog';
 import UserAvatar from '../ui/UserAvatar';
@@ -21,6 +22,7 @@ const nextStatus: Record<TaskStatus, TaskStatus> = {
 
 export default function TaskCard({ task, projectId }: Props) {
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const { label, className } = statusConfig[task.status];
@@ -41,6 +43,10 @@ export default function TaskCard({ task, projectId }: Props) {
       if (context?.previous) {
         queryClient.setQueryData(['projects', projectId, 'tasks'], context.previous);
       }
+      showToast('Failed to update task status', 'error');
+    },
+    onSuccess: () => {
+      showToast('Task status updated');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'tasks'] });
@@ -54,8 +60,10 @@ export default function TaskCard({ task, projectId }: Props) {
         old.filter((t) => t.id !== task.id),
       );
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      showToast('Task deleted successfully');
       setDeleteOpen(false);
     },
+    onError: () => showToast('Failed to delete task', 'error'),
   });
 
   function cycleStatus() {
