@@ -14,20 +14,32 @@ type AuthContextType = AuthState & {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+function loadStoredUser(): SafeUser | null {
+  const raw = sessionStorage.getItem('user');
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as SafeUser;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<AuthState>({
-    user: null,
+    user: loadStoredUser(),
     accessToken: sessionStorage.getItem('accessToken'),
   });
 
   const login = useCallback((token: string, user: SafeUser) => {
     sessionStorage.setItem('accessToken', token);
+    sessionStorage.setItem('user', JSON.stringify(user));
     setAuth({ accessToken: token, user });
   }, []);
 
   const logout = useCallback(async () => {
     await logoutUser().catch(() => {});
     sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('user');
     setAuth({ accessToken: null, user: null });
   }, []);
 
